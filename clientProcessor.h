@@ -22,6 +22,9 @@ private:
 	void List(char* clientMessage, int read_size);
 	void Retr(char* clientMessage, int read_size);
 	void Quit(char* clientMessage, int read_size);
+        void Dele(char* clientMessage, int read_size);
+        void Top(char* clientMessage, int read_size);
+        
     
 public:
     CClientProcessor(int clientS) : clientSock(clientS), serverState(0) {};
