@@ -11,7 +11,8 @@ using namespace std;
 int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
 
     int responseType = 502; // command not implemented
-
+    int length = strlen(clientMessage);
+	clientMessage[length-2] = '\0';
     char command[5] = "comm";
 
     if (read_size >= 4)
@@ -56,10 +57,15 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
 	}
 	if (read_size == 4)
 	{
-		WriteToSocket("-ERR Could not find user\r\n"); //actually user not provided
+		WriteToSocket("-ERR User not provided\r\n"); //actually user not provided
 		return;
 	}
 	char* username = clientMessage + 5; //cut USER[sp]
+	printf("Got USER request for username %s", username);
+	char path[512];
+	path[0] = '\0';
+	strcat(path, "./");
+	strcat(path, username);
 	userDirectory = opendir(username); //TODO "./" + username?
 	strcpy(userDirectoryName, username);
 	if (userDirectory == NULL)
