@@ -12,7 +12,7 @@ int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
 
     int responseType = 502; // command not implemented
     int length = strlen(clientMessage);
-	clientMessage[length-2] = '\0';
+	clientMessage[length-1] = '\0';
     char command[5] = "comm";
 
     if (read_size >= 4)
@@ -61,7 +61,7 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
 		return;
 	}
 	char* username = clientMessage + 5; //cut USER[sp]
-	printf("Got USER request for username %s", username);
+	//WriteToSocket(username);
 	char path[512];
 	path[0] = '\0';
 	strcat(path, "./");
@@ -107,10 +107,12 @@ void CClientProcessor::Pass(char* clientMessage, int read_size) {
 			FILE* passwordFile = fopen(filenameBuffer, "r");
 			//assert(passwordFile != NULL)
 			fgets(passwordBuffer, 1024, passwordFile);
+			int length = strlen(passwordBuffer);
+			passwordBuffer[length-1] = '\0';
 			fclose(passwordFile);
 			rewinddir(userDirectory);
 			//TODO what to do with fileEntity?
-			free(fileEntity);
+			//free(fileEntity);
 			if (strcmp(password, passwordBuffer) == 0)
 			{
 				serverState = 1;
@@ -119,12 +121,16 @@ void CClientProcessor::Pass(char* clientMessage, int read_size) {
 			}
 			else
 			{
+				//WriteToSocket(password);
+				//WriteToSocket("\r\n");
+				//WriteToSocket(passwordBuffer);
+				//WriteToSocket("\r\n");
 				WriteToSocket("-ERR Wrong password\r\n");
 				return;
 			}
 		}
 		//TODO again, what do we do here?
-		free(fileEntity);
+		//free(fileEntity);
 		fileEntity = NULL;
 	}
 	rewinddir(userDirectory);
@@ -148,7 +154,7 @@ void CClientProcessor::Stat(char* clientMessage, int read_size) {
 			totalMessages++;
 			totalOctets += fileEntity->d_reclen;
 		}
-		free(fileEntity);
+		//free(fileEntity);
 		fileEntity = NULL;
 	}
 	rewinddir(userDirectory);
@@ -176,7 +182,7 @@ void CClientProcessor::List(char* clientMessage, int read_size)
 			sprintf(linebuffer, "%s %d\r\n", fileEntity->d_name, fileEntity->d_reclen);
 			WriteToSocket(linebuffer);
 		}
-		free(fileEntity);
+		//free(fileEntity);
 		fileEntity = NULL;
 	}
 	rewinddir(userDirectory);
@@ -195,7 +201,16 @@ void CClientProcessor::Retr(char* clientMessage, int read_size)
 		WriteToSocket("-ERR Message not found\r\n"); //actually mid not provided
 		return;
 	}
+	for (int i = 0; i < strlen(clientMessage); i++)
+	{
+		if (clientMessage[i] == '\r' || clientMessage[i] == '\n')
+			clientMessage[i] = '\0';
+	}
 	char* messageId = clientMessage + 5;
+	WriteToSocket(clientMessage);
+	WriteToSocket("\r\n");
+	WriteToSocket(messageId);
+	WriteToSocket("\r\n");
 	dirent* fileEntity = NULL;
 	bool found = false;
 	while (fileEntity = readdir(userDirectory))
@@ -217,7 +232,7 @@ void CClientProcessor::Retr(char* clientMessage, int read_size)
 				WriteToSocket(lineBuffer);
 			}
 		}
-		free(fileEntity);
+		//free(fileEntity);
 		fileEntity = NULL;
 	}
 	rewinddir(userDirectory);
