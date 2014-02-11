@@ -78,6 +78,10 @@ int getdir(string dir, vector<string> &files) {
 }
 
 void CClientProcessor::User(char* clientMessage, int read_size) {
+    
+    cout << "Received USER"  <<  clientMessage <<endl;
+   
+    
     if (serverState != 0) {
         WriteToSocket("-ERR Not in AUTH state\r\n");
         return;
@@ -86,20 +90,23 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
         WriteToSocket("-ERR User not provided\r\n"); //actually user not provided
         return;
     }
+        
     char* username = clientMessage + 5; //cut USER[sp]
-   /* for (int i = 0; i < strlen(username); i++){
+    for (int i = 0; i < strlen(username); i++){
         if (username[i] == '\r' || username[i] == '\n'){
-            username[i+1] == 0;
-            break;
+            username[i] = 0;
         }
             
-    }*/
+    }
+    
     //WriteToSocket(username);
-    char path[512];
-    path[0] = '\0';
-    strcat(path, "./");
-    strcat(path, username);
+    //char path[512];
+    //path[0] = '\0';
+    //strcat(path, "./");
+    //strcat(path, username);
 
+    cout << "Received USER "  <<  username <<endl;
+    
     vector<string> files;
     vector<string> domains;
     getdir(".", files);
@@ -171,6 +178,12 @@ void CClientProcessor::Pass(char* clientMessage, int read_size) {
         return;
     }
     char* password = clientMessage + 5; //cut PASS[sp]
+        for (int i = 0; i < strlen(password); i++){
+        if (password[i] == '\r' || password[i] == '\n'){
+            password[i] = 0;
+        }
+            
+    }
     dirent* fileEntity = NULL;
     while (fileEntity = readdir(userDirectory)) {
         if (strcmp(fileEntity->d_name, "pass") == 0) {
