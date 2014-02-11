@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define POP3_PORT 2501
+#define SMTP_PORT 2500
 
 
 #endif	/* GLOBAL_H */
