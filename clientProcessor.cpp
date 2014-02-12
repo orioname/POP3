@@ -11,12 +11,8 @@
 
 using namespace std;
 
-//TODO mailbox
-
 int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
-
-    //cout << "client message" << clientMessage << endl;
-    
+  
     int responseType = 502; // command not implemented
     int length = strlen(clientMessage);
     clientMessage[length - 1] = '\0';
@@ -43,7 +39,7 @@ int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
     } else if (strcasecmp(command, "RETR") == 0) {
 
         Retr(clientMessage, read_size);
-        //TODO DELE command, TOP command
+        
     } else if (strcasecmp(command, "DELE") == 0) {
 
         Dele(clientMessage, read_size);
@@ -79,10 +75,9 @@ int getdir(string dir, vector<string> &files) {
     while ((dirp = readdir(dp)) != NULL) {
         files.push_back(string(dirp->d_name));
     }
-
-    cout << "close dir " << dir << endl; 
+ 
     closedir(dp);
- cout << "closed dir " << dir << endl; 
+
     return 0;
 }
 
@@ -109,14 +104,6 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
             
     }
     
-    
-    
-    //WriteToSocket(username);
-    //char path[512];
-    //path[0] = '\0';
-    //strcat(path, "./");
-    //strcat(path, username);
-
     cout << "Received USER "  <<  username <<endl;
     
     vector<string> files;
@@ -143,21 +130,16 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
     string usrFound = "u";
     string domain = "d";
     bool found = false;
-    
-    cout << "seek users" <<endl;
-    
+       
     for (unsigned int i = 0; i < domains.size(); i++) {
         vector<string> users;
         string dir = string("./") + domains.at(i) + string("/");
         getdir(dir, users);
         
-        cout << "loop" <<endl;
         
         for (unsigned int j = 0; j < users.size(); j++){
             if (strcmp(username, users.at(j).c_str()) == 0){
                printf("%s user found!.\n", users.at(j).c_str()); 
-               //strcpy(usrFound, users.at(j).c_str());
-               //strcpy(domain, domains.at(i).c_str());
                cout << "assign" <<endl;
                usrFound = users.at(j).c_str();
                domain = domains.at(i).c_str();
@@ -169,7 +151,6 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
             break;
     }
 
-    //userDirectory = opendir(username); //TODO "./" + username?
     string uDir = string("./") + string(domain) + string("/") + string(usrFound) + string("/mbox/");
     userDirectory = opendir(uDir.c_str());
     strcpy(userDirectoryName, uDir.c_str());
@@ -179,7 +160,6 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
         WriteToSocket("+OK User set\r\n");
 }
 
-//TODO maybe just make it a stub for now?
 
 void CClientProcessor::Pass(char* clientMessage, int read_size) {
 
@@ -214,29 +194,23 @@ void CClientProcessor::Pass(char* clientMessage, int read_size) {
             strcat(filenameBuffer, "/");
             strcat(filenameBuffer, fileEntity->d_name);
             FILE* passwordFile = fopen(filenameBuffer, "r");
-            //assert(passwordFile != NULL)
             fgets(passwordBuffer, 1024, passwordFile);
             int length = strlen(passwordBuffer);
             passwordBuffer[length - 1] = '\0';
             fclose(passwordFile);
             rewinddir(userDirectory);
-            //TODO what to do with fileEntity?
-            //free(fileEntity);
+
             if (strcmp(password, passwordBuffer) == 0) {
                 serverState = 1;
                 WriteToSocket("+OK User authenticated\r\n");
                 return;
             } else {
-                //WriteToSocket(password);
-                //WriteToSocket("\r\n");
-                //WriteToSocket(passwordBuffer);
-                //WriteToSocket("\r\n");
+
                 WriteToSocket("-ERR Wrong password\r\n");
                 return;
             }
         }
-        //TODO again, what do we do here?
-        //free(fileEntity);
+
         fileEntity = NULL;
     }
     rewinddir(userDirectory);
@@ -257,7 +231,7 @@ void CClientProcessor::Stat(char* clientMessage, int read_size) {
             totalMessages++;
             totalOctets += fileEntity->d_reclen;
         }
-        //free(fileEntity);
+
         fileEntity = NULL;
     }
     rewinddir(userDirectory);
@@ -266,7 +240,7 @@ void CClientProcessor::Stat(char* clientMessage, int read_size) {
     WriteToSocket(responseBuffer);
 }
 
-//TODO implement LIST x
+
 
 void CClientProcessor::List(char* clientMessage, int read_size) {
     
@@ -282,7 +256,7 @@ void CClientProcessor::List(char* clientMessage, int read_size) {
             sprintf(linebuffer, "%s %d\r\n", fileEntity->d_name, fileEntity->d_reclen);
             WriteToSocket(linebuffer);
         }
-        //free(fileEntity);
+
         fileEntity = NULL;
     }
     rewinddir(userDirectory);
@@ -303,10 +277,7 @@ void CClientProcessor::Retr(char* clientMessage, int read_size) {
             clientMessage[i] = '\0';
     }
     char* messageId = clientMessage + 5;
-    //WriteToSocket(clientMessage);
-    //WriteToSocket("\r\n");
-    //WriteToSocket(messageId);
-    //WriteToSocket("\r\n");
+
     dirent* fileEntity = NULL;
     bool found = false;
     while ((fileEntity = readdir(userDirectory))) {
@@ -324,7 +295,7 @@ void CClientProcessor::Retr(char* clientMessage, int read_size) {
                 WriteToSocket(lineBuffer);
             }
         }
-        //free(fileEntity);
+
         fileEntity = NULL;
     }
     rewinddir(userDirectory);
@@ -379,7 +350,7 @@ void CClientProcessor::Top(char* clientMessage, int read_size) {
                 i--;
             }
         }
-        //free(fileEntity);
+        
         fileEntity = NULL;
     }
     rewinddir(userDirectory);
@@ -420,7 +391,7 @@ void CClientProcessor::Dele(char* clientMessage, int read_size) {
             strcat(newFName, "d");
             rename(filenameBuffer, newFName);
         }
-        //free(fileEntity);
+
         fileEntity = NULL;
     }
     rewinddir(userDirectory);
@@ -443,7 +414,7 @@ void CClientProcessor::Quit(char* clientMessage, int read_size) {
                 strcat(filenameBuffer, fileEntity->d_name);
                 unlink(filenameBuffer);
             }
-            //free(fileEntity);
+
             fileEntity = NULL;
         }
         rewinddir(userDirectory);
