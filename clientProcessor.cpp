@@ -60,7 +60,7 @@ int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
     return responseType;
 }
 
-void CClientProcessor::WriteToSocket(char* serverMessage) {
+void CClientProcessor::WriteToSocket(const char* serverMessage) {
     write(clientSock, serverMessage, (int) strlen(serverMessage));
 }
 
@@ -102,7 +102,7 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
     }
         
     char* username = clientMessage + 5; //cut USER[sp]
-    for (int i = 0; i < strlen(username); i++){
+    for (unsigned int i = 0; i < strlen(username); i++){
         if (username[i] == '\r' || username[i] == '\n'){
             username[i] = 0;
         }
@@ -198,14 +198,14 @@ void CClientProcessor::Pass(char* clientMessage, int read_size) {
         return;
     }
     char* password = clientMessage + 5; //cut PASS[sp]
-        for (int i = 0; i < strlen(password); i++){
+        for (unsigned int i = 0; i < strlen(password); i++){
         if (password[i] == '\r' || password[i] == '\n'){
             password[i] = 0;
         }
             
     }
     dirent* fileEntity = NULL;
-    while (fileEntity = readdir(userDirectory)) {
+    while ((fileEntity = readdir(userDirectory))) {
         if (strcmp(fileEntity->d_name, "pass") == 0) {
             char filenameBuffer[1024];
             char passwordBuffer[1024];
@@ -252,7 +252,7 @@ void CClientProcessor::Stat(char* clientMessage, int read_size) {
     dirent* fileEntity = NULL;
     int totalMessages = 0;
     int totalOctets = 0;
-    while (fileEntity = readdir(userDirectory)) {
+    while ((fileEntity = readdir(userDirectory))) {
         if (strcmp(fileEntity->d_name, ".") != 0 && strcmp(fileEntity->d_name, "..") != 0 && strcmp(fileEntity->d_name, "pass") != 0) {
             totalMessages++;
             totalOctets += fileEntity->d_reclen;
@@ -269,7 +269,7 @@ void CClientProcessor::Stat(char* clientMessage, int read_size) {
 //TODO implement LIST x
 
 void CClientProcessor::List(char* clientMessage, int read_size) {
-    int index = 0;
+    
     if (serverState != 1) {
         WriteToSocket("-ERR Not in TRANSACTION state\r\n");
         return;
@@ -277,7 +277,7 @@ void CClientProcessor::List(char* clientMessage, int read_size) {
     WriteToSocket("+OK List follows\r\n");
     dirent* fileEntity = NULL;
     char linebuffer[128];
-    while (fileEntity = readdir(userDirectory)) {
+    while ((fileEntity = readdir(userDirectory))) {
         if (strcmp(fileEntity->d_name, ".") != 0 && strcmp(fileEntity->d_name, "..") != 0 && strcmp(fileEntity->d_name, "pass") != 0) {
             sprintf(linebuffer, "%s %d\r\n", fileEntity->d_name, fileEntity->d_reclen);
             WriteToSocket(linebuffer);
@@ -298,7 +298,7 @@ void CClientProcessor::Retr(char* clientMessage, int read_size) {
         WriteToSocket("-ERR Message not found\r\n"); //actually mid not provided
         return;
     }
-    for (int i = 0; i < strlen(clientMessage); i++) {
+    for (unsigned int i = 0; i < strlen(clientMessage); i++) {
         if (clientMessage[i] == '\r' || clientMessage[i] == '\n')
             clientMessage[i] = '\0';
     }
@@ -309,7 +309,7 @@ void CClientProcessor::Retr(char* clientMessage, int read_size) {
     //WriteToSocket("\r\n");
     dirent* fileEntity = NULL;
     bool found = false;
-    while (fileEntity = readdir(userDirectory)) {
+    while ((fileEntity = readdir(userDirectory))) {
         if (strcmp(fileEntity->d_name, messageId) == 0) {
             found = true;
             WriteToSocket("+OK Message follows\r\n");
@@ -362,7 +362,7 @@ void CClientProcessor::Top(char* clientMessage, int read_size) {
     amount[i] = '\0';
     dirent* fileEntity = NULL;
     bool found = false;
-    while (fileEntity = readdir(userDirectory)) {
+    while ((fileEntity = readdir(userDirectory))) {
         if (strcmp(fileEntity->d_name, mId) == 0) {
             found = true;
             WriteToSocket("+OK Message follows\r\n");
@@ -399,14 +399,14 @@ void CClientProcessor::Dele(char* clientMessage, int read_size) {
         WriteToSocket("-ERR Message not found\r\n"); //actually mid not provided
         return;
     }
-    for (int i = 0; i < strlen(clientMessage); i++) {
+    for (unsigned int i = 0; i < strlen(clientMessage); i++) {
         if (clientMessage[i] == '\r' || clientMessage[i] == '\n')
             clientMessage[i] = '\0';
     }
     char* messageId = clientMessage + 5;
     dirent* fileEntity = NULL;
     bool found = false;
-    while (fileEntity = readdir(userDirectory)) {
+    while ((fileEntity = readdir(userDirectory))) {
         if (strcmp(fileEntity->d_name, messageId) == 0) {
             found = true;
             WriteToSocket("+OK Message marked to delete\r\n");
@@ -434,7 +434,7 @@ void CClientProcessor::Quit(char* clientMessage, int read_size) {
     WriteToSocket("+OK See you soon\r\n");
     if (serverState == 2) {
         dirent* fileEntity = NULL;
-        while (fileEntity = readdir(userDirectory)) {
+        while ((fileEntity = readdir(userDirectory))) {
             if (strstr(fileEntity->d_name, "d") != NULL) {
                 char filenameBuffer[1024];
                 filenameBuffer[0] = '\0';

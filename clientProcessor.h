@@ -15,7 +15,7 @@ private:
 	DIR* userDirectory;
 	char userDirectoryName[256];
 	int serverState; //0 - auth; 1 - trans; 2 - update; TODO make it into an enum
-    void WriteToSocket(char* serverMessage);
+    void WriteToSocket(const char* serverMessage);
     void User(char* clientMessage, int read_size);
     void Pass(char* clientMessage, int read_size);
     void Stat(char* clientMessage, int read_size);
