@@ -15,6 +15,8 @@ using namespace std;
 
 int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
 
+    //cout << "client message" << clientMessage << endl;
+    
     int responseType = 502; // command not implemented
     int length = strlen(clientMessage);
     clientMessage[length - 1] = '\0';
@@ -55,7 +57,7 @@ int CClientProcessor::ProcessMessage(char* clientMessage, int read_size) {
         Quit(clientMessage, read_size);
         return -1;
     }
-    return 0;
+    return responseType;
 }
 
 void CClientProcessor::WriteToSocket(char* serverMessage) {
@@ -65,15 +67,22 @@ void CClientProcessor::WriteToSocket(char* serverMessage) {
 int getdir(string dir, vector<string> &files) {
     DIR *dp;
     struct dirent *dirp;
+    
+
+    
     if ((dp = opendir(dir.c_str())) == NULL) {
                 cout << "Error(" << errno << ") opening " << dir << endl;
                 return errno;
     }
 
+    
     while ((dirp = readdir(dp)) != NULL) {
         files.push_back(string(dirp->d_name));
     }
+
+    cout << "close dir " << dir << endl; 
     closedir(dp);
+ cout << "closed dir " << dir << endl; 
     return 0;
 }
 
@@ -98,6 +107,8 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
         }
             
     }
+    
+    
     
     //WriteToSocket(username);
     //char path[512];
@@ -127,22 +138,28 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
         }
     }
     
-    char* usrFound = new char();
-    char* domain = new char();
-    strcpy(usrFound, "u");
-    strcpy(domain, "u");
+    
+    string usrFound = "u";
+    string domain = "d";
     bool found = false;
+    
+    cout << "seek users" <<endl;
     
     for (unsigned int i = 0; i < domains.size(); i++) {
         vector<string> users;
         string dir = string("./") + domains.at(i) + string("/");
-        getdir(dir.c_str(), users);
+        getdir(dir, users);
+        
+        cout << "loop" <<endl;
         
         for (unsigned int j = 0; j < users.size(); j++){
             if (strcmp(username, users.at(j).c_str()) == 0){
                printf("%s user found!.\n", users.at(j).c_str()); 
-               strcpy(usrFound, users.at(j).c_str());
-               strcpy(domain, domains.at(i).c_str());
+               //strcpy(usrFound, users.at(j).c_str());
+               //strcpy(domain, domains.at(i).c_str());
+               cout << "assign" <<endl;
+               usrFound = users.at(j).c_str();
+               domain = domains.at(i).c_str();
                found = true;
                break;
             }
@@ -165,6 +182,8 @@ void CClientProcessor::User(char* clientMessage, int read_size) {
 
 void CClientProcessor::Pass(char* clientMessage, int read_size) {
 
+    cout << "Received PASS" << endl;
+    
     if (serverState != 0) {
         WriteToSocket("-ERR Not in AUTH state\r\n");
         return;
